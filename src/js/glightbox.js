@@ -289,7 +289,11 @@ class GlightboxInit {
         // Preload subsequent slides
         if (this.settings.preload) {
             this.preloadSlide(index + 1);
+            this.preloadSlide(index + 2);
+            this.preloadSlide(index + 3);
             this.preloadSlide(index - 1);
+            this.preloadSlide(index - 2);
+            this.preloadSlide(index - 3);
         }
 
         // Handle navigation arrows

@@ -2280,7 +2280,11 @@
         this.slideDescriptionContained = this.slideDescription && hasClass(this.slideDescription.parentNode, 'gslide-media');
         if (this.settings.preload) {
           this.preloadSlide(index + 1);
+          this.preloadSlide(index + 2);
+          this.preloadSlide(index + 3);
           this.preloadSlide(index - 1);
+          this.preloadSlide(index - 2);
+          this.preloadSlide(index - 3);
         }
         this.updateNavigationClasses();
         this.activeSlide = slideNode;
