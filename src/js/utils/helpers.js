@@ -539,3 +539,13 @@ export function size(o) {
 export function isNumber(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
 }
+
+export function loadScript(url, callback) {
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = url;
+    if (callback) {
+        script.onload = callback;
+    }
+    document.head.appendChild(script);
+}

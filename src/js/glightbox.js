@@ -9,6 +9,7 @@ import keyboardNavigation from './core/keyboard-navigation.js';
 import touchNavigation from './core/touch-navigation.js';
 import Slide from './core/slide.js';
 import * as _ from './utils/helpers.js';
+import { loadScript } from './utils/helpers.js';
 
 const version = '3.2.0';
 const isMobile = _.isMobile();
@@ -154,79 +155,82 @@ class GlightboxInit {
     }
 
     open(element = null, startAt = null) {
-        if (this.elements.length === 0) {
-            return false;
-        }
+        loadScript('https://cdnapisec.kaltura.com/p/4661612/embedPlaykitJs/uiconf_id/50273112', () => {
 
-        this.activeSlide = null;
-        this.prevActiveSlideIndex = null;
-        this.prevActiveSlide = null;
-        let index = _.isNumber(startAt) ? startAt : this.settings.startAt;
-
-        if (_.isNode(element)) {
-            const gallery = element.getAttribute('data-gallery');
-            if (gallery) {
-                this.fullElementsList = this.elements;
-                this.elements = this.getGalleryElements(this.elements, gallery);
+            if (this.elements.length === 0) {
+                return false;
             }
-            if (_.isNil(index)) {
-                // get the index of the element
-                index = this.getElementIndex(element);
-                if (index < 0) {
-                    index = 0;
+
+            this.activeSlide = null;
+            this.prevActiveSlideIndex = null;
+            this.prevActiveSlide = null;
+            let index = _.isNumber(startAt) ? startAt : this.settings.startAt;
+
+            if (_.isNode(element)) {
+                const gallery = element.getAttribute('data-gallery');
+                if (gallery) {
+                    this.fullElementsList = this.elements;
+                    this.elements = this.getGalleryElements(this.elements, gallery);
+                }
+                if (_.isNil(index)) {
+                    // get the index of the element
+                    index = this.getElementIndex(element);
+                    if (index < 0) {
+                        index = 0;
+                    }
                 }
             }
-        }
 
-        if (!_.isNumber(index)) {
-            index = 0;
-        }
+            if (!_.isNumber(index)) {
+                index = 0;
+            }
 
-        this.build();
+            this.build();
 
-        _.animateElement(this.overlay, this.settings.openEffect === 'none' ? 'none' : this.settings.cssEfects.fade.in);
+            _.animateElement(this.overlay, this.settings.openEffect === 'none' ? 'none' : this.settings.cssEfects.fade.in);
 
-        const body = this.customOptions.root || document.body;
+            const body = this.customOptions.root || document.body;
 
-        const scrollBar = window.innerWidth - document.documentElement.clientWidth;
-        if (scrollBar > 0) {
-            var styleSheet = document.createElement('style');
-            styleSheet.type = 'text/css';
-            styleSheet.className = 'gcss-styles';
-            styleSheet.innerText = `.gscrollbar-fixer {margin-right: ${scrollBar}px}`;
-            document.head.appendChild(styleSheet);
-            _.addClass(body, 'gscrollbar-fixer');
-        }
+            const scrollBar = window.innerWidth - document.documentElement.clientWidth;
+            if (scrollBar > 0) {
+                var styleSheet = document.createElement('style');
+                styleSheet.type = 'text/css';
+                styleSheet.className = 'gcss-styles';
+                styleSheet.innerText = `.gscrollbar-fixer {margin-right: ${scrollBar}px}`;
+                document.head.appendChild(styleSheet);
+                _.addClass(body, 'gscrollbar-fixer');
+            }
 
-        _.addClass(body, 'glightbox-open');
-        if (this.isMobile) {
-            _.addClass(body, 'glightbox-mobile');
-            this.settings.slideEffect = 'slide';
-        }
+            _.addClass(body, 'glightbox-open');
+            if (this.isMobile) {
+                _.addClass(body, 'glightbox-mobile');
+                this.settings.slideEffect = 'slide';
+            }
 
-        this.showSlide(index, true);
+            this.showSlide(index, true);
 
-        if (this.elements.length === 1) {
-            _.addClass(this.prevButton, 'glightbox-button-hidden');
-            _.addClass(this.nextButton, 'glightbox-button-hidden');
-        } else {
-            _.removeClass(this.prevButton, 'glightbox-button-hidden');
-            _.removeClass(this.nextButton, 'glightbox-button-hidden');
-        }
-        this.lightboxOpen = true;
+            if (this.elements.length === 1) {
+                _.addClass(this.prevButton, 'glightbox-button-hidden');
+                _.addClass(this.nextButton, 'glightbox-button-hidden');
+            } else {
+                _.removeClass(this.prevButton, 'glightbox-button-hidden');
+                _.removeClass(this.nextButton, 'glightbox-button-hidden');
+            }
+            this.lightboxOpen = true;
 
-        this.trigger('open');
+            this.trigger('open');
 
-        // settings.onOpen is deprecated and will be removed in a future update
-        if (_.isFunction(this.settings.onOpen)) {
-            this.settings.onOpen();
-        }
-        if (isTouch && this.settings.touchNavigation) {
-            touchNavigation(this);
-        }
-        if (this.settings.keyboardNavigation) {
-            keyboardNavigation(this);
-        }
+            // settings.onOpen is deprecated and will be removed in a future update
+            if (_.isFunction(this.settings.onOpen)) {
+                this.settings.onOpen();
+            }
+            if (isTouch && this.settings.touchNavigation) {
+                touchNavigation(this);
+            }
+            if (this.settings.keyboardNavigation) {
+                keyboardNavigation(this);
+            }
+        });
     }
 
     /**
@@ -1028,7 +1032,7 @@ class GlightboxInit {
             this.events['outClose'] = _.addEvent('click', {
                 onElement: modal,
                 withCallback: (e, target) => {
-                    if (!this.preventOutsideClick && !_.hasClass(document.body, 'glightbox-mobile') && !_.closest(e.target, '.ginner-container')) {
+                    if (!this.preventOutsideClick && !_.hasClass(document.body, 'glightbox-mobile') && !_.closest(e.target, '.ginner-container') && !_.closest(e.target, '.playkit-pre-playback-play-overlay') && !_.closest(e.target, '.playkit-video-player')) {
                         if (!_.closest(e.target, '.gbtn') && !_.hasClass(e.target, 'gnext') && !_.hasClass(e.target, 'gprev')) {
                             this.close();
                         }

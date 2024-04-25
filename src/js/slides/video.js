@@ -8,6 +8,9 @@
  */
 import { has, closest, injectAssets, addClass, removeClass, createHTML, isFunction, waitUntil } from '../utils/helpers.js';
 
+const KALTURA_DEFAULT_PARTNER_ID = 4661612;
+const KALTURA_DEFAULT_PLAYER_ID = 50273112;
+
 export default function slideVideo(slide, data, index, callback) {
     const slideContainer = slide.querySelector('.ginner-container');
     const videoID = 'gvideo' + index;
@@ -20,14 +23,20 @@ export default function slideVideo(slide, data, index, callback) {
 
     const videoWrapper = slide.querySelector('.gvideo-wrapper');
 
-    injectAssets(this.settings.plyr.css, 'Plyr');
-
     let url = data.href;
     let provider = data?.videoProvider;
     let customPlaceholder = false;
 
     slideMedia.style.maxWidth = data.width;
 
+    if (url.match(/kaltura/)) {
+        launchKalturaPlayer(videoWrapper, videoID, index, data, url);
+        callback()
+        return;
+    }
+
+    // Default player is Plyr
+    injectAssets(this.settings.plyr.css, 'Plyr');
     injectAssets(this.settings.plyr.js, 'Plyr', () => {
         // Set vimeo videos
         if (!provider && url.match(/vimeo\.com\/([0-9]*)/)) {
@@ -101,5 +110,57 @@ function handleMediaFullScreen(event) {
     }
     if (event.type === 'exitfullscreen') {
         removeClass(media, 'fullscreen');
+    }
+}
+
+function launchKalturaPlayer(videoWrapper, videoID, index, data, url) {
+    const playerContainerId = `kaltura_player_${videoID}`;
+    const entryId = extractKalturaEntryId(url);
+    const kalturaData = data?.kaltura || {};
+    prepareKalturaPlayer(videoWrapper, videoID, playerContainerId, index, data);
+    playKalturaVideo(playerContainerId, entryId, kalturaData?.partnerId, kalturaData?.playerId);
+}
+
+function extractKalturaEntryId(url) {
+    const pattern = /entryId\/([^\/]+)/;
+    const matches = url.match(pattern);
+    return matches ? matches[1] : null;
+}
+
+function prepareKalturaPlayer(videoWrapper, videoID, playerContainerId, index, data) {
+    const provider = 'kaltura'
+    const element = createHTML(`<div id="${playerContainerId}" class="gvideo-local" style="background:#000; max-width: ${data.width}; height: ${data.height || '640px'}"></div>`);
+    addClass(videoWrapper, `${provider}-video gvideo`);
+    videoWrapper.appendChild(element);
+    videoWrapper.setAttribute('data-id', videoID);
+    videoWrapper.setAttribute('data-index', index);
+}
+
+function playKalturaVideo(playerContainerId, entryId, partnerId, playerId) {
+    try {
+        const kalturaPlayer = KalturaPlayer.setup({
+            targetId: playerContainerId,
+            provider: {
+                partnerId: partnerId || KALTURA_DEFAULT_PARTNER_ID,
+                uiConfId: playerId || KALTURA_DEFAULT_PLAYER_ID,
+            },
+            playback: {
+                autoplay: true,
+                muted: true
+            }
+        });
+        kalturaPlayer.loadMedia({ entryId: entryId }).then(() => {
+            console.log('Kaltura Player loaded');
+            const playButton = document.querySelector('.playkit-volume-control');
+            if (playButton) {
+                playButton.addEventListener('click', () => {
+                    console.log('playkit-volume-control clicked');
+                });
+            } else {
+                console.log('Play button not found. It might not be loaded yet, or the class name has changed.');
+            }
+        });
+    } catch (e) {
+        console.error('Error loading Kaltura Player:', e.message);
     }
 }
