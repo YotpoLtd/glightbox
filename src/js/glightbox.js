@@ -393,6 +393,7 @@ class GlightboxInit {
         } else if (index >= this.elements.length) {
             index = 0;
         }
+
         this.showSlide(index);
     }
 
